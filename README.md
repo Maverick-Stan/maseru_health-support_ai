@@ -22,7 +22,6 @@ This project started from the DataCamp course **“Building AI Agents with Googl
   - Root coordinator agent
 - **Streamlit chat UI**
 - **Language toggle:** English / Sesotho (prompt steering)
-- 
 ![Language Toggle](Assets/language_toggle.jpg)
 
 - **Gentle escalation banner** for urgent or crisis-related signals
