@@ -23,7 +23,7 @@ This project started from the DataCamp course **“Building AI Agents with Googl
 - **Streamlit chat UI**
 - **Language toggle:** English / Sesotho (prompt steering)
 - 
-![Language Toggle](Assets/Language toggle.jpg)
+![Language Toggle](Assets/language_toggle.jpg)
 
 - **Gentle escalation banner** for urgent or crisis-related signals
 - Model backend can be configured (OpenAI via LiteLLM, or Gemini if you choose)
