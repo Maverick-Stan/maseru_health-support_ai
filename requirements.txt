@@ -1,0 +1,5 @@
+streamlit
+google-adk==1.0.0
+litellm
+google-generativeai
+protobuf==5.28.1
