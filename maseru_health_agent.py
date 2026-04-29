@@ -6,6 +6,9 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
+from src.decision_engine import evaluate_risk
+from src.response_generator import generate_response
+
 # -----------------------------
 # Model
 # -----------------------------
@@ -51,6 +54,18 @@ suggestion_agent = LlmAgent(
     model=AGENT_MODEL
 )
 
+escalation_agent = LlmAgent(
+    name="EscalationAgent",
+    description="Responds when the risk engine detects high-risk language.",
+    instruction=(
+        "Respond with calm, supportive language. Tell the user they are not alone. "
+        "Encourage them to speak with a trusted person and visit the nearest clinic "
+        "or Queen Mamohato Memorial Hospital in Maseru. Do not sound alarming. "
+        "Do not diagnose or provide medical treatment."
+    ),
+    model=AGENT_MODEL
+)
+
 root_agent = LlmAgent(
     name="HealthSupportCoordinator",
     description="Coordinates health support agents and escalates when needed.",
@@ -64,7 +79,7 @@ root_agent = LlmAgent(
         "In escalation cases, do not delegate further—respond directly and clearly."
     ),
     model=AGENT_MODEL,
-    sub_agents=[greeting_agent, conversation_agent, suggestion_agent]
+    sub_agents=[greeting_agent, conversation_agent, suggestion_agent, escalation_agent]
 )
 
 # -----------------------------
@@ -114,4 +129,34 @@ class MaseruHealthSupportSystem:
     def chat(self, message: str) -> str:
         return asyncio.run(self._chat_async(message))
 
+    def assess_risk(self, message: str) -> dict:
+        """Expose explainable risk metadata to Streamlit and admin tooling."""
+        return evaluate_risk(message)
+
+    def chat_with_risk(self, message: str) -> tuple[str, dict]:
+        """Evaluate risk, then route the message through the existing agent flow."""
+        risk = self.assess_risk(message)
+
+        if risk["risk_level"] == "HIGH":
+            prompt = (
+                "Route this message to EscalationAgent. "
+                f"Risk reason: {risk['reason']}. "
+                f"Matched keywords: {', '.join(risk['matched_keywords']) or 'none'}.\n\n"
+                f"User message: {message}"
+            )
+            try:
+                response = self.chat(prompt)
+            except Exception:
+                response = generate_response("HIGH")
+            return response, risk
+
+        if risk["risk_level"] == "MEDIUM":
+            message = (
+                "The risk engine marked this as MEDIUM risk. "
+                "Use a warmer, more supportive tone and ask gentle follow-up questions.\n\n"
+                f"{message}"
+            )
+
+        response = self.chat(message)
+        return response, risk
 
