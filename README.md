@@ -1,23 +1,32 @@
 # Maseru Health AI
 
-A modular AI healthcare support prototype exploring rule-based escalation, structured LLM workflows, and safety-aware response generation for low-resource environments.
+A modular AI healthcare support prototype exploring rule-based escalation, structured
+LLM workflows, and safety-aware response generation for low-resource environments.
 
 Live app: [https://maseru-health-support-ai.streamlit.app/](https://maseru-health-support-ai.streamlit.app/)
 
 ## Overview
 
-Maseru Health AI is a Streamlit-based healthcare support prototype for non-diagnostic conversations. It organizes a chatbot-style interface into a modular AI workflow with input parsing, rule-based safety checks, LLM-assisted guidance, structured response formatting, fallback handling, and deployment-conscious configuration.
+Maseru Health AI is a Streamlit-based healthcare support prototype for non-diagnostic
+conversations. It organizes a chatbot-style interface into a modular AI workflow
+with input parsing, rule-based safety checks, LLM-assisted guidance, structured
+response formatting, fallback handling, and deployment-conscious configuration.
 
-The project is intentionally conservative. It does not diagnose, treat, prescribe, provide emergency response, claim clinical validation, or present itself as production-ready.
+The project is intentionally conservative. It does not diagnose, treat, prescribe,
+provide emergency response, claim clinical validation, or present itself as
+production-ready.
 
 ## What the System Does
 
 - Accepts user messages through a Streamlit chat interface.
 - Extracts lightweight intent and support signals from user input.
 - Runs rule-based safety checks before the LLM is called.
-- Uses selected high-risk phrases and physical red-flag phrases to trigger escalation guidance.
-- Uses an existing demonstration TF-IDF + Logistic Regression risk-screening classifier as part of the safety layer.
-- Calls a single Google ADK + LiteLLM-backed LLM workflow when escalation is not required.
+- Uses selected high-risk phrases and physical red-flag phrases to trigger escalation
+  guidance.
+- Uses an existing demonstration TF-IDF + Logistic Regression risk-screening classifier
+  as part of the safety layer.
+- Calls a single Google ADK + LiteLLM-backed LLM workflow when escalation is not
+  required.
 - Generates structured internal responses and renders user-facing guidance in chat.
 - Returns a deterministic fallback response if the LLM is unavailable or fails.
 - Provides a developer/admin page for inspecting parser and safety metadata.
@@ -40,54 +49,63 @@ The project is organized as a modular Python application:
 
 - `app/streamlit_app.py`: user-facing Streamlit chat interface.
 - `app/streamlit_admin_app.py`: developer/admin safety inspection page.
-- `app/triage_service.py`: workflow layer connecting parsing, safety checks, LLM calls, response formatting, and fallback handling.
+- `app/triage_service.py`: workflow layer connecting parsing, safety checks, LLM calls,
+  response formatting, and fallback handling.
 - `app/parser.py`: lightweight intent and signal extraction.
 - `app/rules.py`: rule-based safety checks and escalation decisions.
 - `app/llm.py`: single LLM workflow integration through Google ADK + LiteLLM.
-- `app/response_formatter.py`: structured internal response objects and user-facing markdown rendering.
+- `app/response_formatter.py`: structured internal response objects and user-facing
+  markdown rendering.
 - `app/config.py`: environment variable and Streamlit secrets handling.
-- `src/`: demonstration ML utilities for preprocessing, TF-IDF feature engineering, classifier training, and risk scoring.
-- `tests/`: standard-library tests for safety behavior, fallback behavior, and Streamlit secret handling.
+- `src/`: demonstration ML utilities for preprocessing, TF-IDF feature engineering,
+  classifier training, and risk scoring.
+- `tests/`: standard-library tests for safety behavior, fallback behavior, and Streamlit
+  secret handling.
 
 ## Architecture Diagram
 
 ```mermaid
 flowchart TD
-    A["User Message"] --> B["Streamlit UI"]
-    B --> C["Input Parser"]
-    C --> D["Rule-Based Safety Checks"]
-    D --> E{"Escalation Required?"}
+    A[User Message] --> B[Streamlit UI]
+    B --> C[Input Parser]
+    C --> D[Rule-Based Safety Checks]
+    D --> E{Escalation Required?}
 
-    E -->|Yes| F["Deterministic Escalation Guidance"]
-    E -->|No| G["Single LLM Workflow Layer"]
+    E -->|Yes| F[Deterministic Escalation Guidance]
+    E -->|No| G[Single LLM Workflow Layer]
 
-    G --> H{"LLM Response Available?"}
+    G --> H{LLM Response Available?}
 
-    H -->|Yes| I["Structured Response Formatter"]
-    H -->|No| J["Safe Fallback Response"]
+    H -->|Yes| I[Structured Response Formatter]
+    H -->|No| J[Safe Fallback Response]
 
-    F --> K["Rendered Streamlit Response"]
+    F --> K[Rendered Streamlit Response]
     I --> K
     J --> K
 
-    D --> L["Admin Safety Metadata View"]
+    D --> L[Developer/Admin Safety Metadata View]
 ```
 
 ## Application Flow
 
 1. A user enters a message in the Streamlit chat interface.
-2. `parse_user_input()` extracts a coarse intent such as `greeting`, `emotional_support`, `health_support`, or `general_support`.
-3. `assess_safety()` evaluates the message with rule-based checks and the demonstration risk-screening classifier.
-4. If selected high-risk or physical red-flag phrases are detected, the system returns escalation guidance without calling the LLM.
+2. `parse_user_input()` extracts a coarse intent such as `greeting`,
+   `emotional_support`, `health_support`, or `general_support`.
+3. `assess_safety()` evaluates the message with rule-based checks and the
+   demonstration risk-screening classifier.
+4. If selected high-risk or physical red-flag phrases are detected, the system
+   returns escalation guidance without calling the LLM.
 5. If escalation is not required, `MaseruLLMClient` sends a bounded prompt to the configured LLM.
 6. `AssistantResponse` stores structured response fields internally.
-7. The Streamlit chat renders only the user-facing guidance and `When to seek professional help` section.
+7. The Streamlit chat renders only the user-facing guidance and `When to seek
+   professional help` section.
 8. If the LLM fails or the API key is missing, the app returns a safe fallback message.
 
 ## Key Features
 
 - Modular Streamlit application structure.
-- Explicit separation between UI, parsing, safety checks, LLM workflow, response formatting, and configuration.
+- Explicit separation between UI, parsing, safety checks, LLM workflow, response
+  formatting, and configuration.
 - Rule-based escalation guidance before LLM generation.
 - Demonstration ML risk-screening layer using TF-IDF and Logistic Regression.
 - Structured internal response model with simplified chat rendering.
@@ -98,13 +116,16 @@ flowchart TD
 
 ## Design Decisions
 
-- Rule-based safety checks run before LLM generation so high-risk messages do not rely on generative behavior.
+- Rule-based safety checks run before LLM generation so high-risk messages do not rely
+  on generative behavior.
 - Escalation guidance is deterministic and conservative.
 - The LLM workflow is limited to general, non-diagnostic support guidance.
 - The response formatter keeps internal structure while rendering concise chat output.
-- The classifier is kept as a demonstration risk-screening component, not a clinically validated model.
+- The classifier is kept as a demonstration risk-screening component, not a clinically
+  validated model.
 - API keys are loaded from environment variables or Streamlit secrets, not hardcoded.
-- The low-resource context is reflected in the project framing and conservative support flow, not in offline infrastructure.
+- The low-resource context is reflected in the project framing and conservative support
+  flow, not in offline infrastructure.
 
 ## Tech Stack
 
@@ -261,7 +282,8 @@ The app also supports this nested OpenAI secret format:
 api_key = "your_api_key_here"
 ```
 
-Without `OPENAI_API_KEY`, the app renders deterministic fallback responses. LLM-assisted guidance will not run.
+Without `OPENAI_API_KEY`, the app renders deterministic fallback responses.
+LLM-assisted guidance will not run.
 
 ## Tests
 
@@ -281,15 +303,19 @@ python -m unittest discover
 
 ## Current Limitations
 
-- The classifier uses a small demonstration dataset and should not be treated as clinically reliable.
+- The classifier uses a small demonstration dataset and should not be treated as
+  clinically reliable.
 - Safety rules are intentionally simple and need broader review before real-world use.
 - The app does not persist conversations, users, or risk assessments.
-- There is no authentication or role-based access control for the developer/admin inspection page.
+- There is no authentication or role-based access control for the developer/admin
+  inspection page.
 - There is no application monitoring or structured production logging.
 - The app has not been clinically validated.
 - The system is not production-ready and should not be used as a medical device.
-- Sesotho support is limited and depends mainly on the selected response language and LLM behavior.
-- The low-resource context is reflected in product framing; the app does not implement offline access, SMS services, clinic directories, or local health-system integrations.
+- Sesotho support is limited and depends mainly on the selected response language and
+  LLM behavior.
+- The low-resource context is reflected in product framing; the app does not implement
+  offline access, SMS services, clinic directories, or local health-system integrations.
 
 ## Roadmap
 
@@ -311,7 +337,8 @@ python -m unittest discover
 
 ## Portfolio Positioning
 
-This project demonstrates AI Systems Engineering skills without overstating clinical capability:
+This project demonstrates AI Systems Engineering skills without overstating clinical
+capability:
 
 - modular Python architecture around a Streamlit product surface
 - clear separation between deterministic safety checks and generative model behavior
@@ -322,4 +349,5 @@ This project demonstrates AI Systems Engineering skills without overstating clin
 - tests for the highest-risk deterministic paths
 - transparent limitations in a healthcare-adjacent context
 
-The project is best understood as an applied AI engineering prototype for non-diagnostic healthcare-support conversations, not as a clinical product.
+The project is best understood as an applied AI engineering prototype for
+non-diagnostic healthcare-support conversations, not as a clinical product.
