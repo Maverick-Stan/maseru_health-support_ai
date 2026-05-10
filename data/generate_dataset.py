@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 
-DATASET_PATH = Path("data/mental_health_dataset.csv")
+DATASET_PATH = Path(__file__).resolve().parent / "mental_health_dataset.csv"
 
 
 SAFE_EXAMPLES = [

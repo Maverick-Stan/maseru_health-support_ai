@@ -6,11 +6,8 @@ import pickle
 from pathlib import Path
 
 from src.preprocessing import clean_text
+from src.paths import MODEL_PATH, VECTORIZER_PATH
 from src.rules import check_critical_keywords
-
-
-MODEL_PATH = Path("models/model.pkl")
-VECTORIZER_PATH = Path("models/vectorizer.pkl")
 
 
 def _load_pickle(path: Path):
@@ -41,14 +38,19 @@ def evaluate_risk(text: str) -> dict:
     cleaned_text = clean_text(text)
     keyword_detected, matched_keywords = check_critical_keywords(text)
 
+    model_error = None
     try:
         probability = _model_probability(cleaned_text)
-    except FileNotFoundError:
+    except Exception as exc:
         probability = 0.0
+        model_error = str(exc)
 
     if keyword_detected:
         risk_level = "HIGH"
         reason = "keyword_trigger"
+    elif model_error:
+        risk_level = "LOW"
+        reason = "model_unavailable"
     elif probability > 0.7:
         risk_level = "HIGH"
         reason = "model_high_confidence"
@@ -64,4 +66,5 @@ def evaluate_risk(text: str) -> dict:
         "probability": probability,
         "reason": reason,
         "matched_keywords": matched_keywords,
+        "model_available": model_error is None,
     }

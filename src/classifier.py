@@ -11,11 +11,9 @@ from sklearn.metrics import classification_report, f1_score, precision_score, re
 from sklearn.model_selection import train_test_split
 
 from src.feature_engineering import fit_vectorizer
+from src.paths import DATASET_PATH, MODEL_PATH
 from src.preprocessing import clean_text
 
-
-DATASET_PATH = Path("data/mental_health_dataset.csv")
-MODEL_PATH = Path("models/model.pkl")
 
 
 def train_classifier(dataset_path: Path = DATASET_PATH, model_path: Path = MODEL_PATH):

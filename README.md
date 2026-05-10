@@ -1,279 +1,102 @@
-# Maseru Health Support AI
+# Maseru Health AI
 
-## Data Science + Multi-Agent Mental Health Support System
+Maseru Health AI is an operational AI assistant designed for healthcare support workflows in low-resource environments.
 
-Maseru Health Support AI is a Streamlit and Google ADK application that combines a multi-agent conversational assistant with a production-style risk detection engine. The system evaluates user messages with both machine learning and rule-based safety logic, then exposes explainable risk metadata through a minimal admin dashboard.
+## Overview
 
-The project demonstrates how a prompt-based chatbot can be upgraded into a structured data science system with classification, feature engineering, model artifacts, decision thresholds, false-negative awareness, and escalation workflows.
+Maseru Health AI is a Streamlit-based, non-diagnostic healthcare support assistant focused on safe conversational guidance, lightweight input parsing, rule-based safety escalation, and LLM-assisted response generation.
 
-> Important: This project is an educational prototype. It is not a medical device and does not provide diagnosis, treatment, or emergency services.
+The project is built as an AI systems engineering portfolio project: it separates the user interface, parsing, safety rules, LLM orchestration, and response formatting into clear Python modules. The system is intentionally conservative. It does not provide diagnosis, treatment, clinical advice, emergency response, or claims of clinical validation.
 
-![User App Screenshot](Assets/app.jpg)
+## What the System Does
 
-## What This Project Demonstrates
+- Accepts user messages through a Streamlit chat interface.
+- Parses the message into a coarse intent and simple support signals.
+- Runs safety checks before calling the LLM.
+- Uses rule-based escalation for high-risk language and serious physical red flags.
+- Uses the existing Google ADK + LiteLLM provider with `gpt-4o-mini` by default.
+- Returns structured internal responses and renders user-facing guidance with professional-help guidance.
+- Falls back to a safe deterministic response if the LLM is unavailable or fails.
+- Provides a small admin view for inspecting parser and safety metadata.
 
-- Text classification for mental health risk detection
-- TF-IDF feature engineering
-- Logistic Regression probability scoring
-- Rule-based critical keyword detection
-- Hybrid decision logic combining ML + rules
-- Recall-focused risk classification to reduce false negatives
-- Explainable outputs for admin review
-- Multi-agent orchestration with Google ADK
-- Streamlit user and admin interfaces
-- Modular, interview-friendly project structure
+## What the System Does NOT Do
 
-## Core Enhancement
+- It does not diagnose medical or mental health conditions.
+- It does not prescribe medication or treatment.
+- It does not replace a clinician, counselor, clinic, hospital, or emergency service.
+- It does not provide emergency response capability.
+- It does not claim clinical validation or production readiness.
+- It does not use retrieval-augmented generation.
+- It does not store patient records or provide authenticated clinical workflows.
 
-The original system was a prompt-based mental health support chatbot. This upgraded version adds a data science layer that evaluates each user message before the conversational agent responds.
+## Architecture
 
-The risk engine returns:
+The app follows a simple modular workflow:
 
-- `risk_level`: LOW, MEDIUM, or HIGH
-- `probability`: model confidence that the message is `at_risk`
-- `reason`: why the decision was made
-- `matched_keywords`: critical phrases detected by rules
+- `app/streamlit_app.py`: Streamlit user interface.
+- `app/triage_service.py`: application service that coordinates the workflow.
+- `app/parser.py`: lightweight intent and signal extraction.
+- `app/rules.py`: rule-based safety layer built around the existing risk classifier.
+- `app/llm.py`: Google ADK + LiteLLM orchestration.
+- `app/response_formatter.py`: structured response generation.
+- `app/config.py`: environment and runtime configuration.
+- `src/paths.py`: shared repository-root-aware filesystem paths.
+- `src/`: existing preprocessing, TF-IDF, classifier, and decision-engine utilities.
+- `tests/`: standard-library tests for parser, safety, escalation, and fallback behavior.
 
-If a message is HIGH risk, the system displays an escalation banner:
+## Mermaid Architecture Diagram
 
-```text
-You are not alone. Please consider visiting a nearby clinic or speaking to a professional.
+```mermaid
+flowchart TD
+    A["User message in Streamlit"] --> B["Input parser"]
+    B --> C["Rule-based safety layer"]
+    C --> D{"Escalation required?"}
+    D -- "Yes" --> E["Deterministic escalation response"]
+    D -- "No" --> F["LLM orchestration layer"]
+    F --> G{"LLM call succeeds?"}
+    G -- "Yes" --> H["Structured response formatter"]
+    G -- "No" --> I["Safe fallback response"]
+    E --> J["Streamlit response"]
+    H --> J
+    I --> J
+    C --> K["Admin metadata view"]
 ```
 
-## System Architecture
+## Operational Workflow
 
-```text
-User Message
-    |
-    v
-Preprocessing
-    |
-    v
-TF-IDF Vectorizer + Logistic Regression Model
-    |
-    v
-Rule-Based Critical Keyword Check
-    |
-    v
-Decision Engine
-    |
-    +--> LOW    -> Normal agent flow
-    +--> MEDIUM -> Supportive tone adjustment
-    +--> HIGH   -> Escalation agent + safety banner
-```
+1. The user enters a message in the Streamlit chat interface.
+2. The parser extracts a coarse intent such as `greeting`, `emotional_support`, `health_support`, or `general_support`.
+3. The safety layer evaluates the message using deterministic rules and the existing TF-IDF + Logistic Regression risk classifier.
+4. If high-risk language or physical red flags are detected, the system returns escalation messaging without calling the LLM.
+5. If escalation is not required, the LLM layer generates supportive, non-diagnostic guidance.
+6. The response formatter keeps a consistent internal structure:
+   - Summary
+   - Guidance
+   - When to seek professional help
+   - Limitations
+7. The Streamlit chat renders guidance and professional-help guidance, while limitations are shown as a small app-level disclaimer.
+8. If the LLM fails or the API key is missing, the system returns a safe fallback response.
 
-## Multi-Agent Design
+## Key Features
 
-The system keeps the existing Google ADK agents and adds risk-aware routing around them.
+- Modular AI workflow design.
+- Streamlit user interface and admin safety-inspection page.
+- Pre-LLM safety checks.
+- Deterministic escalation path for high-risk messages.
+- LLM orchestration through Google ADK + LiteLLM.
+- Environment-variable handling for API keys.
+- Structured response formatting.
+- Graceful fallback behavior when the LLM is unavailable.
+- Repository-root-aware model and dataset paths for local and Streamlit Cloud runs.
 
-| Agent | Role |
-| --- | --- |
-| `GreetingAgent` | Welcomes the user and sets expectations |
-| `ConversationAgent` | Gently explores emotional and physical wellbeing |
-| `SuggestionAgent` | Provides safe, non-clinical wellbeing suggestions |
-| `HealthSupportCoordinator` | Coordinates the conversation flow |
-| `EscalationAgent` | Responds calmly when HIGH risk is detected |
+## Design Decisions
 
-No existing agents were removed. The risk engine is integrated into the current flow instead of replacing it.
-
-## Risk Detection Engine
-
-The project uses a hybrid safety approach:
-
-### 1. Machine Learning Classifier
-
-- Dataset labels: `safe`, `at_risk`
-- Features: TF-IDF unigrams and bigrams
-- Model: Logistic Regression
-- Output: probability of the `at_risk` class
-- Saved artifacts:
-  - `models/model.pkl`
-  - `models/vectorizer.pkl`
-
-### 2. Rule-Based Escalation
-
-Some phrases should not rely only on model probability. The rules module checks for critical language such as:
-
-- `kill myself`
-- `can't go on`
-- `end it all`
-- `want to die`
-
-If a critical keyword is found, the system immediately assigns HIGH risk with the reason `keyword_trigger`.
-
-### 3. Decision Logic
-
-The decision engine applies explainable thresholds:
-
-| Condition | Risk Level | Reason |
-| --- | --- | --- |
-| Critical keyword detected | HIGH | `keyword_trigger` |
-| Model probability > 0.70 | HIGH | `model_high_confidence` |
-| Model probability between 0.40 and 0.70 | MEDIUM | `model_moderate` |
-| Model probability < 0.40 | LOW | `model_low_confidence` |
-
-This design prioritizes recall because false negatives are the highest-risk failure mode in this domain.
-
-## Admin Dashboard
-
-The admin page gives a clean, minimal view of the risk engine output.
-
-It displays:
-
-- Risk Level
-- Confidence Score
-- Reason
-- Matched Keywords
-- Escalation banner only for HIGH risk
-
-Run it with:
-
-```powershell
-streamlit run app/streamlit_admin_app.py --server.port 8502
-```
-
-## User App
-
-The user-facing chat app remains simple and supportive. The risk engine runs in the background, while the visible experience stays focused on conversation.
-
-Run it with:
-
-```powershell
-streamlit run application.py --server.port 8501
-```
-
-Alternative structured entry point:
-
-```powershell
-streamlit run app/streamlit_user_app.py --server.port 8501
-```
-
-## Project Structure
-
-```text
-.
-+-- app/
-|   +-- streamlit_admin_app.py
-|   +-- streamlit_user_app.py
-+-- data/
-|   +-- generate_dataset.py
-|   +-- mental_health_dataset.csv
-+-- models/
-|   +-- model.pkl
-|   +-- vectorizer.pkl
-+-- src/
-|   +-- preprocessing.py
-|   +-- feature_engineering.py
-|   +-- classifier.py
-|   +-- rules.py
-|   +-- decision_engine.py
-|   +-- response_generator.py
-+-- application.py
-+-- maseru_health_agent.py
-+-- requirements.txt
-+-- README.md
-```
-
-## Data Science Pipeline
-
-### Dataset
-
-The dataset is generated by `data/generate_dataset.py` and saved to:
-
-```text
-data/mental_health_dataset.csv
-```
-
-Example samples:
-
-| Text | Label |
-| --- | --- |
-| `I feel hopeless` | `at_risk` |
-| `I can't go on` | `at_risk` |
-| `I want to end it` | `at_risk` |
-| `I am tired of everything` | `at_risk` |
-| `I feel okay today` | `safe` |
-
-### Preprocessing
-
-Implemented in `src/preprocessing.py`:
-
-- Lowercasing
-- Punctuation removal
-- URL/email/noise removal
-- Whitespace normalization
-- Tokenization
-
-### Feature Engineering
-
-Implemented in `src/feature_engineering.py`:
-
-- TF-IDF vectorization
-- Unigrams and bigrams
-- Pickle-based vectorizer persistence
-
-### Model Training
-
-Implemented in `src/classifier.py`:
-
-- Logistic Regression
-- Balanced class weights
-- Recall-oriented evaluation threshold
-- Prints precision, recall, and F1 score
-- Saves model and vectorizer artifacts
-
-Train the model:
-
-```powershell
-python -m src.classifier
-```
-
-Generate the dataset:
-
-```powershell
-python data/generate_dataset.py
-```
-
-## Example Risk Outputs
-
-```python
-evaluate_risk("I want to die")
-```
-
-```python
-{
-    "risk_level": "HIGH",
-    "probability": 0.66,
-    "reason": "keyword_trigger",
-    "matched_keywords": ["want to die"]
-}
-```
-
-```python
-evaluate_risk("I want to end it")
-```
-
-```python
-{
-    "risk_level": "HIGH",
-    "probability": 0.81,
-    "reason": "model_high_confidence",
-    "matched_keywords": []
-}
-```
-
-```python
-evaluate_risk("I feel okay today")
-```
-
-```python
-{
-    "risk_level": "LOW",
-    "probability": 0.24,
-    "reason": "model_low_confidence",
-    "matched_keywords": []
-}
-```
+- The safety layer runs before the LLM to reduce reliance on generative behavior for high-risk messages.
+- High-risk responses are deterministic rather than model-generated.
+- The LLM is used only for supportive, general guidance after safety checks pass.
+- The response structure is generated by application code so the UI remains consistent even when the LLM response varies.
+- The existing classifier and model artifacts are preserved to keep the project simple and runnable.
+- API keys are loaded from environment variables rather than hardcoded in the repository.
 
 ## Tech Stack
 
@@ -281,83 +104,175 @@ evaluate_risk("I feel okay today")
 - Streamlit
 - Google ADK
 - LiteLLM
+- OpenAI-compatible model configuration through `OPENAI_API_KEY`
 - scikit-learn
 - pandas
 - TF-IDF
 - Logistic Regression
-- Pickle model persistence
+- python-dotenv
 
-## Installation
+## Repository Structure
+
+```text
+.
++-- app/
+|   +-- __init__.py
+|   +-- config.py
+|   +-- llm.py
+|   +-- parser.py
+|   +-- response_formatter.py
+|   +-- rules.py
+|   +-- streamlit_admin_app.py
+|   +-- streamlit_app.py
+|   +-- triage_service.py
++-- data/
+|   +-- generate_dataset.py
+|   +-- mental_health_dataset.csv
++-- models/
+|   +-- model.pkl
+|   +-- vectorizer.pkl
++-- src/
+|   +-- __init__.py
+|   +-- classifier.py
+|   +-- decision_engine.py
+|   +-- feature_engineering.py
+|   +-- paths.py
+|   +-- preprocessing.py
+|   +-- rules.py
++-- tests/
+|   +-- __init__.py
+|   +-- test_safety_workflow.py
++-- .gitignore
++-- application.py
++-- LICENSE
++-- requirements.txt
++-- README.md
+```
+
+## Setup Instructions
+
+Create and activate a virtual environment:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+Install dependencies:
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-If using OpenAI through LiteLLM:
+## Environment Variables
+
+The LLM layer uses LiteLLM with `gpt-4o-mini` by default. Configure the API key through an environment variable:
 
 ```powershell
-setx OPENAI_API_KEY "YOUR_OPENAI_KEY"
+setx OPENAI_API_KEY "your_api_key_here"
 ```
 
-Then restart your terminal before running the app.
-
-## Running the Full Project
-
-1. Install dependencies:
+Optional variables:
 
 ```powershell
-pip install -r requirements.txt
+setx MASERU_LLM_MODEL "gpt-4o-mini"
+setx MASERU_APP_NAME "maseru_health_support"
 ```
 
-2. Generate the dataset:
+After using `setx`, restart the terminal before running the app.
 
-```powershell
-python data/generate_dataset.py
+You can also create a local `.env` file:
+
+```text
+OPENAI_API_KEY=your_api_key_here
+MASERU_LLM_MODEL=gpt-4o-mini
+MASERU_APP_NAME=maseru_health_support
 ```
 
-3. Train the model:
+Do not commit `.env` files or API keys.
 
-```powershell
-python -m src.classifier
-```
+## How to Run Locally
 
-4. Start the user app:
+Main user app:
 
 ```powershell
 streamlit run application.py --server.port 8501
 ```
 
-5. Start the admin app:
+Equivalent structured entry point:
+
+```powershell
+streamlit run app/streamlit_app.py --server.port 8501
+```
+
+Admin safety-inspection app:
 
 ```powershell
 streamlit run app/streamlit_admin_app.py --server.port 8502
 ```
 
-## Why This Is Recruiter-Relevant
+Regenerate the demonstration dataset:
 
-This project shows more than chatbot prompting. It demonstrates the ability to design an end-to-end applied ML system:
+```powershell
+python data/generate_dataset.py
+```
 
-- Build and persist a labeled dataset
-- Preprocess unstructured text
-- Engineer TF-IDF features
-- Train and evaluate a classifier
-- Tune decision thresholds around real-world risk
-- Combine ML with deterministic business rules
-- Explain model decisions to non-technical users
-- Integrate ML into an agent-based application
-- Build separate user and admin interfaces
-- Keep the implementation modular and maintainable
+Retrain the demonstration risk classifier:
 
-## Future Improvements
+```powershell
+python -m src.classifier
+```
 
-- Expand the dataset with expert-reviewed examples
-- Add model calibration and threshold validation
-- Track longitudinal risk trends by session
-- Add role-based admin authentication
-- Store assessments in a database
-- Add evaluation tests for false negatives
-- Replace the demo classifier with a validated clinical safety model
+Run the deterministic safety workflow tests:
 
-## Disclaimer
+```powershell
+python -m unittest discover
+```
 
-This application is for educational and portfolio purposes only. It should not be used as a replacement for professional mental health support, emergency care, or clinical judgment.
+## Deployment Notes
+
+For Streamlit Cloud, use `application.py` as the main file.
+
+Configure secrets or environment variables in the deployment platform:
+
+```text
+OPENAI_API_KEY=your_api_key_here
+MASERU_LLM_MODEL=gpt-4o-mini
+MASERU_APP_NAME=maseru_health_support
+```
+
+The app can still render safe fallback responses without `OPENAI_API_KEY`, but LLM-assisted guidance will not run.
+
+## Current Limitations
+
+- The classifier uses a small demonstration dataset and should not be treated as clinically reliable.
+- Safety rules are intentionally simple and need broader review for real-world deployment.
+- The app does not persist conversations, users, or risk assessments.
+- There is no authentication or role-based access control for the admin page.
+- The app has not been clinically validated.
+- The system is not production-ready and should not be used as a medical device.
+- Sesotho support is limited and depends mainly on the selected response language and LLM behavior.
+
+## Roadmap
+
+- Expand test coverage for UI launch behavior and LLM orchestration failures.
+- Expand the safety rule set with expert-reviewed language and local care guidance.
+- Add calibrated evaluation for the demonstration classifier.
+- Add session persistence with explicit privacy controls.
+- Add admin authentication before exposing safety metadata in any deployed setting.
+- Improve bilingual response quality with reviewed Sesotho content.
+- Add structured logging for development and debugging without storing sensitive user data by default.
+
+## Portfolio Positioning
+
+This project demonstrates AI systems engineering skills beyond a basic chatbot demo:
+
+- Designing a modular AI workflow around a Streamlit product surface.
+- Separating deterministic safety checks from generative model behavior.
+- Orchestrating LLM calls behind a service layer.
+- Handling API-key configuration through environment variables.
+- Generating structured, safety-bounded responses.
+- Preserving transparent limitations in a sensitive healthcare-adjacent context.
+- Building deployment-aware code paths that can run locally or on Streamlit Cloud.
+
+The project is best understood as an applied AI engineering prototype for healthcare support workflows in low-resource environments, not as a clinical product.

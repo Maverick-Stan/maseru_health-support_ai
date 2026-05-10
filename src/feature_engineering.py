@@ -7,8 +7,10 @@ from pathlib import Path
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+from src.paths import VECTORIZER_PATH
 
-DEFAULT_VECTORIZER_PATH = Path("models/vectorizer.pkl")
+
+DEFAULT_VECTORIZER_PATH = VECTORIZER_PATH
 
 
 def fit_vectorizer(texts, output_path: Path = DEFAULT_VECTORIZER_PATH):
