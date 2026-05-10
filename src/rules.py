@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from src.preprocessing import clean_text
 
-
 CRITICAL_KEYWORDS = [
     "kill myself",
     "cant go on",

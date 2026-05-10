@@ -9,7 +9,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 from src.paths import VECTORIZER_PATH
 
-
 DEFAULT_VECTORIZER_PATH = VECTORIZER_PATH
 
 

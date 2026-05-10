@@ -8,7 +8,6 @@ from app.parser import ParsedQuery
 from src.decision_engine import evaluate_risk
 from src.preprocessing import clean_text
 
-
 PHYSICAL_RED_FLAGS = [
     "chest pain",
     "difficulty breathing",

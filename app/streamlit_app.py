@@ -7,7 +7,6 @@ from pathlib import Path
 
 import streamlit as st
 
-
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
@@ -81,7 +80,9 @@ def main() -> None:
         if settings.llm_available:
             st.success(f"Configured: {settings.llm_model}")
         else:
-            st.warning("OPENAI_API_KEY is not configured. Safe fallback responses are enabled.")
+            st.warning(
+                "OPENAI_API_KEY is not configured. Safe fallback responses are enabled."
+            )
 
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
@@ -129,7 +130,9 @@ def main() -> None:
             "model_available": result.safety.model_available,
         }
     )
-    st.session_state.messages.append({"role": "assistant", "content": markdown_response})
+    st.session_state.messages.append(
+        {"role": "assistant", "content": markdown_response}
+    )
 
 
 if __name__ == "__main__":

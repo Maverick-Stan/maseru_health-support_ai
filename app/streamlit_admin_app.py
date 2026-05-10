@@ -7,7 +7,6 @@ from pathlib import Path
 
 import streamlit as st
 
-
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
@@ -51,7 +50,9 @@ def main() -> None:
         col4.metric("Escalation", "Yes" if result.escalation_required else "No")
 
         if not result.model_available:
-            st.info("The classifier model was unavailable, so rule-based safety output was used.")
+            st.info(
+                "The classifier model was unavailable, so rule-based safety output was used."
+            )
 
         st.divider()
         st.write("**Signals**")

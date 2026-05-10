@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 
 from src.preprocessing import clean_text
 
-
 GREETING_TERMS = {"hello", "hi", "hey", "morning", "afternoon", "evening"}
 EMOTIONAL_TERMS = {
     "anxious",
@@ -75,4 +74,3 @@ def parse_user_input(message: str, language: str = "English") -> ParsedQuery:
         intent=intent,
         signals=signals,
     )
-

@@ -78,7 +78,9 @@ class MaseruLLMClient:
     ) -> str:
         """Generate a safe, non-diagnostic response for a parsed message."""
         if not self.runner:
-            raise LLMUnavailableError(self.unavailable_reason or "The LLM is unavailable.")
+            raise LLMUnavailableError(
+                self.unavailable_reason or "The LLM is unavailable."
+            )
 
         prompt = self._build_prompt(parsed_query, safety, conversation_context or [])
         return asyncio.run(self._run_async(prompt))
@@ -87,7 +89,9 @@ class MaseruLLMClient:
         if not self._types:
             raise LLMUnavailableError("The Google ADK message types are unavailable.")
 
-        content = self._types.Content(role="user", parts=[self._types.Part(text=prompt)])
+        content = self._types.Content(
+            role="user", parts=[self._types.Part(text=prompt)]
+        )
         async for event in self.runner.run_async(
             user_id=self.user_id,
             session_id=self.session_id,

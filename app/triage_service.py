@@ -29,7 +29,9 @@ class TriageResult:
 class TriageService:
     """Coordinates the health support workflow for the UI layer."""
 
-    def __init__(self, user_id: str = "patient_001", llm_client: MaseruLLMClient | None = None):
+    def __init__(
+        self, user_id: str = "patient_001", llm_client: MaseruLLMClient | None = None
+    ):
         self.llm_client = llm_client or MaseruLLMClient(user_id=user_id)
 
     def handle_message(
@@ -71,4 +73,3 @@ class TriageService:
                 used_llm=False,
                 error=str(exc),
             )
-

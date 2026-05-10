@@ -8,8 +8,10 @@ from dataclasses import dataclass
 try:
     from dotenv import load_dotenv
 except ModuleNotFoundError:
+
     def load_dotenv(*_args, **_kwargs):
         return False
+
 
 from src.paths import ROOT_DIR
 
@@ -61,16 +63,16 @@ class Settings:
 def get_settings() -> Settings:
     """Load settings from `.env`, environment variables, and Streamlit secrets."""
     load_dotenv(ROOT_DIR / ".env")
-    openai_api_key = (
-        _setting("OPENAI_API_KEY")
-        or _streamlit_nested_secret("openai", "api_key")
+    openai_api_key = _setting("OPENAI_API_KEY") or _streamlit_nested_secret(
+        "openai", "api_key"
     )
 
     if openai_api_key and not os.getenv("OPENAI_API_KEY"):
         os.environ["OPENAI_API_KEY"] = openai_api_key
 
     return Settings(
-        app_name=_setting("MASERU_APP_NAME", "maseru_health_support") or "maseru_health_support",
+        app_name=_setting("MASERU_APP_NAME", "maseru_health_support")
+        or "maseru_health_support",
         llm_model=_setting("MASERU_LLM_MODEL", "gpt-4o-mini") or "gpt-4o-mini",
         openai_api_key=openai_api_key,
     )

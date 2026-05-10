@@ -7,13 +7,17 @@ from pathlib import Path
 
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, f1_score, precision_score, recall_score
+from sklearn.metrics import (
+    classification_report,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 from sklearn.model_selection import train_test_split
 
 from src.feature_engineering import fit_vectorizer
 from src.paths import DATASET_PATH, MODEL_PATH
 from src.preprocessing import clean_text
-
 
 
 def train_classifier(dataset_path: Path = DATASET_PATH, model_path: Path = MODEL_PATH):
@@ -48,7 +52,9 @@ def train_classifier(dataset_path: Path = DATASET_PATH, model_path: Path = MODEL
         for probability in at_risk_probabilities
     ]
 
-    precision = precision_score(y_test, predictions, pos_label="at_risk", zero_division=0)
+    precision = precision_score(
+        y_test, predictions, pos_label="at_risk", zero_division=0
+    )
     recall = recall_score(y_test, predictions, pos_label="at_risk", zero_division=0)
     f1 = f1_score(y_test, predictions, pos_label="at_risk", zero_division=0)
 

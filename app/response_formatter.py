@@ -76,7 +76,10 @@ def format_llm_response(
     safety: SafetyAssessment,
 ) -> AssistantResponse:
     """Wrap an LLM response with fixed safety and limitation sections."""
-    guidance = llm_text.strip() or "I am here to listen and help you think through a safe next step."
+    guidance = (
+        llm_text.strip()
+        or "I am here to listen and help you think through a safe next step."
+    )
     return AssistantResponse(
         summary=build_summary(parsed_query, safety),
         guidance=guidance,
@@ -88,7 +91,9 @@ def format_llm_response(
     )
 
 
-def escalation_response(parsed_query: ParsedQuery, safety: SafetyAssessment) -> AssistantResponse:
+def escalation_response(
+    parsed_query: ParsedQuery, safety: SafetyAssessment
+) -> AssistantResponse:
     """Return deterministic escalation messaging without relying on the LLM."""
     if parsed_query.language == "Sesotho":
         guidance = (
@@ -114,7 +119,9 @@ def escalation_response(parsed_query: ParsedQuery, safety: SafetyAssessment) -> 
     )
 
 
-def fallback_response(parsed_query: ParsedQuery, safety: SafetyAssessment) -> AssistantResponse:
+def fallback_response(
+    parsed_query: ParsedQuery, safety: SafetyAssessment
+) -> AssistantResponse:
     """Return a safe response when the LLM layer is unavailable or fails."""
     return AssistantResponse(
         summary=build_summary(parsed_query, safety),
